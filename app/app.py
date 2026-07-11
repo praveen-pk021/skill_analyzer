@@ -8,7 +8,13 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.placement_pipeline import build_gap_report, load_model, load_stats, predict_probability
+from src.placement_pipeline import (
+    build_gap_report,
+    build_model,
+    load_model,
+    load_stats,
+    predict_probability,
+)
 
 st.set_page_config(page_title="Placement Predictor", page_icon="🎓", layout="wide")
 
@@ -18,9 +24,14 @@ st.caption("Estimate placement probability and see which profile factors are hol
 try:
     model = load_model()
     stats = load_stats()
-except FileNotFoundError:
-    st.error("Model artifacts are missing. Run the training script first.")
-    st.stop()
+except (FileNotFoundError, ModuleNotFoundError, ValueError):
+    st.info("Training model artifacts on first launch...")
+    try:
+        model = build_model()
+        stats = load_stats()
+    except Exception as exc:
+        st.error(f"Model initialization failed: {exc}")
+        st.stop()
 
 with st.sidebar:
     st.header("Profile Input")
